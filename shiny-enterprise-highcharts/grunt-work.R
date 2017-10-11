@@ -116,3 +116,47 @@ hc_add_series_df(highchart(), economics_long2, "line", x = date,
                  y = value01, group = variable) %>%
   hc_xAxis(type = "datetime")
 
+
+### Plotly line chart
+output$x2 <- renderPlotly({
+  
+  s <- input$x1_rows_selected
+  
+  if (!length(s)) {
+    p <- d %>%
+      plot_ly(x = ~mpg, y = ~disp, mode = "markers", color = I('black'), name = 'Unfiltered') %>%
+      layout(showlegend = T) %>% 
+      highlight("plotly_selected", color = I('red'), selected = attrs_selected(name = 'Filtered'))
+  } else if (length(s)) {
+    pp <- m %>%
+      plot_ly() %>% 
+      add_trace(x = ~mpg, y = ~disp, mode = "markers", color = I('black'), name = 'Unfiltered') %>%
+      layout(showlegend = T)
+    
+    # selected data
+    pp <- add_trace(pp, data = m[s, , drop = F], x = ~mpg, y = ~disp, mode = "markers",
+                    color = I('red'), name = 'Filtered')
+  }
+  
+})
+
+dens <- with(diamonds, tapply(price, INDEX = cut, density))
+df <- data.frame(
+  x = unlist(lapply(dens, "[[", "x")),
+  y = unlist(lapply(dens, "[[", "y")),
+  cut = rep(names(dens), each = length(dens[[1]]$x))
+)
+
+result <- db_flights %>%
+  group_by(carrier, month) %>%
+  tally() %>%
+  collect()
+
+
+  plot_ly(result, x = ~month, y = ~n) %>%
+  add_lines() %>%
+  add_trace(data = result[result$carrier == "AA",], x = ~month, y = ~n, mode = "lines",
+            color = I('red'), name = 'Selected')
+  
+  
+  plot_ly(result, x = ~month, y = ~n, grp = ~carrier name = 'trace 0', type = 'scatter', mode = 'lines')
